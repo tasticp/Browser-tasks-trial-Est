@@ -67,6 +67,25 @@ npm run build
 
 Then package the files in the `public/` directory as your browser extension.
 
+## Testing the Extension Locally
+
+### Chrome / Chromium
+1. Run `npm run build` to generate the extension files.
+2. Open Chrome and go to `chrome://extensions`.
+3. Enable "Developer mode" (toggle in the top right).
+4. Click "Load unpacked" and select the `public/` directory from your project.
+5. The extension will appear in your browser. Open a new tab and test its features.
+
+### Firefox
+1. Run `npm run build` to generate the extension files.
+2. Open Firefox and go to `about:debugging#/runtime/this-firefox`.
+3. Click "Load Temporary Add-on" and select the `manifest.json` file from the `public/` directory.
+4. The extension will be loaded temporarily. Open a new tab and test its features.
+
+### Notes
+- Any changes to the code require rebuilding (`npm run build`) and reloading the extension in your browser.
+- For production, package the contents of `public/` as a zip and submit to the browser's extension store.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
