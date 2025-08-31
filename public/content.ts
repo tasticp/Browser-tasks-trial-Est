@@ -28,7 +28,11 @@
       const href = a?.getAttribute('href');
       try {
         const url = new URL(href || '', location.href).toString();
-        e.preventDefault();
+        // Always track new tabs opened from a parent for virtual nested grouping
+        if (e.button === 0) {
+          // If the link opens in a new tab (target=_blank or user action), let browser handle it
+          // Extension will track the openerTabId in background.js for virtual grouping
+        }
         // Detect spellcheck/autocorrect: if the anchor is inside an input or search bar, reload instead of opening a new tab
         let isSearchOrInput = false;
         if (a) {
@@ -45,9 +49,7 @@
           location.reload();
           return;
         }
-        if (typeof chrome !== 'undefined' && chrome.runtime) {
-          chrome.runtime.sendMessage({ type: 'openChild', url });
-        }
+        // Otherwise, do nothing by default
       } catch (_) {
         // ignore invalid URLs
       }

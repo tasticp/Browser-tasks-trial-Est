@@ -57,6 +57,9 @@ Simply open [Lovable](https://lovable.dev/projects/b585dc5f-50ee-4170-b883-92118
 
 The extension tracks tab relationships and displays them in a hierarchical tree or list view. It works in Chrome, Chromium, and Firefox browsers. All extension scripts are now TypeScript and support modern browser APIs.
 
+### Virtual Nested Tab Groups
+Chrome and other browsers only support flat tab groups, but this extension UI supports true nested tab grouping. Every new tab opened from a parent is tracked as a child, and the tree view displays the full hierarchy, allowing you to organize tabs in groups within groups.
+
 ### Building the Extension
 
 To build the extension for deployment, use:
