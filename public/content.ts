@@ -38,7 +38,18 @@
         if (a) {
           let parent = a.parentElement;
           while (parent) {
-            if (parent.tagName === 'INPUT' || parent.tagName === 'FORM' || parent.getAttribute('role') === 'search') {
+            const tag = parent.tagName;
+            const role = parent.getAttribute('role');
+            const editable = parent.getAttribute('contenteditable');
+            const autocomplete = parent.getAttribute('autocomplete');
+            if (
+              tag === 'INPUT' ||
+              tag === 'TEXTAREA' ||
+              tag === 'FORM' ||
+              role === 'search' ||
+              editable === 'true' ||
+              (autocomplete && autocomplete.toLowerCase() !== 'off')
+            ) {
               isSearchOrInput = true;
               break;
             }
