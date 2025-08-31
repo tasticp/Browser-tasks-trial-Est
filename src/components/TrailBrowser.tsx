@@ -92,11 +92,16 @@ function TreeNode({
               ? "border-ring/40 bg-secondary text-foreground ring-1 ring-ring/30"
               : "border-transparent hover:bg-secondary"
           }`}
-          style={{ marginLeft: depth > 0 ? depth * 6 : 0 }}
+          style={{ marginLeft: depth > 0 ? depth * 16 : 0 }}
         >
           <span className="inline-flex items-center gap-2">
             {hasChildren ? <FolderTree className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
             <span className="truncate">{node.title}</span>
+            {depth === 0 ? (
+              <span className="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs">Parent</span>
+            ) : (
+              <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">Child</span>
+            )}
           </span>
         </button>
         {depth > 0 && (
@@ -110,7 +115,7 @@ function TreeNode({
         )}
       </div>
       {hasChildren && node.expanded && (
-        <ul className="mt-1 ml-4 space-y-1">
+        <ul className="mt-1 ml-4 space-y-1 border-l-2 border-muted-foreground/30 pl-2">
           {node.children.map((c) => (
             <TreeNode
               key={c.id}

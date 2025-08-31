@@ -11,9 +11,48 @@ interface TrailNode {
 
 interface TrailStore {
   nodes: Record<number, TrailNode>;
+  childLimit?: number;
 }
 
-// ...existing code...
+
+function ensureNodeDefaults(node: Partial<TrailNode>): TrailNode {
+  return Object.assign({ expanded: false, title: "", url: "" }, node) as TrailNode;
+}
+
+async function getStore(windowId: number): Promise<TrailStore> {
+  const key = KEY(windowId);
+  const res = await chrome.storage.local.get(key);
+  return res[key] || { nodes: {}, childLimit: 10 };
+}
+
+async function setStore(windowId: number, store: TrailStore) {
+  const key = KEY(windowId);
+  await chrome.storage.local.set({ [key]: store });
+}
+
+function toTree(storeNodes: Record<number, TrailNode>, activeTabId?: number) {
+  const map: Record<string, any> = {};
+  Object.values(storeNodes).forEach((n) => {
+    map[n.tabId] = {
+      id: String(n.tabId),
+      title: n.title || n.url || "Tab",
+      url: n.url,
+      expanded: !!n.expanded,
+      children: [],
+      parentId: n.parentId != null ? String(n.parentId) : null,
+    };
+  });
+  Object.values(map).forEach((n) => {
+    if (n.parentId && map[n.parentId]) {
+      map[n.parentId].children.push(n);
+    }
+  });
+  const roots = Object.values(map).filter((n) => !n.parentId);
+  return {
+    root: { id: "root", title: "Trail", children: roots, expanded: true, parentId: null },
+    selectedId: activeTabId ? String(activeTabId) : "",
+  };
+}
 
 chrome.runtime.onInstalled.addListener(async () => {
   const win = await chrome.windows.getCurrent();
@@ -35,9 +74,18 @@ chrome.runtime.onInstalled.addListener(async () => {
 chrome.tabs.onCreated.addListener(async (tab) => {
   if (!tab.id || tab.windowId == null) return;
   const store = await getStore(tab.windowId);
+  const parentId = tab.openerTabId ?? null;
+  // Enforce child tab limit if set
+  if (parentId != null && store.childLimit) {
+    const childCount = Object.values(store.nodes).filter(n => n.parentId === parentId).length;
+    if (childCount >= store.childLimit) {
+      // Optionally notify user or just do nothing
+      return;
+    }
+  }
   store.nodes[tab.id] = ensureNodeDefaults({
     tabId: tab.id,
-    parentId: tab.openerTabId ?? null,
+    parentId,
     title: tab.title || "",
     url: tab.url || "",
   });
@@ -58,20 +106,21 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   const store = await getStore(removeInfo.windowId);
   const nodes = store.nodes;
-  const toDelete = new Set([tabId]);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const [idStr, n] of Object.entries(nodes)) {
-      const id = Number(idStr);
-      const node = n as TrailNode;
-      if (!toDelete.has(id) && node.parentId != null && toDelete.has(node.parentId)) {
-        toDelete.add(id);
-        changed = true;
+  // Recursively find all child tabs of tabId
+  function collectChildren(id: number, acc: Set<number>) {
+    for (const n of Object.values(nodes)) {
+      if (n.parentId === id && !acc.has(n.tabId)) {
+        acc.add(n.tabId);
+        collectChildren(n.tabId, acc);
       }
     }
   }
-  for (const id of toDelete) delete nodes[id];
+  const toDelete = new Set([tabId]);
+  collectChildren(tabId, toDelete);
+  for (const id of toDelete) {
+    try { await chrome.tabs.remove(id); } catch {}
+    delete nodes[id];
+  }
   await setStore(removeInfo.windowId, store);
 });
 
@@ -96,6 +145,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const parentId = sender.tab?.id;
       if (!parentId) return sendResponse({ ok: false });
       const parentIndex = sender.tab?.index ?? 0;
+      const store = await getStore(sender.tab?.windowId ?? 0);
+      const limit = store.childLimit ?? 10;
+      const childCount = Object.values(store.nodes).filter(n => n.parentId === parentId).length;
+      if (childCount >= limit) {
+        return sendResponse({ ok: false, error: "Child tab limit reached" });
+      }
       const created = await chrome.tabs.create({ url: msg.url, openerTabId: parentId, index: parentIndex + 1 });
       sendResponse({ ok: true, tabId: created.id });
     } else if (msg.type === "toggleNode") {
@@ -108,11 +163,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       await setStore(winId, store);
       sendResponse({ ok: true });
     } else if (msg.type === "collapseAll") {
-      const winId = sender.tab?.windowId || (await chrome.windows.getCurrent()).id;
-      const store = await getStore(winId);
-  Object.values(store.nodes).forEach((n) => ((n as TrailNode).expanded = false));
-      await setStore(winId, store);
-      sendResponse({ ok: true });
+      let winId = sender.tab?.windowId;
+      if (typeof winId !== "number") {
+        const win = await chrome.windows.getCurrent();
+        winId = win.id;
+      }
+      if (typeof winId === "number") {
+        const store = await getStore(winId);
+        Object.values(store.nodes).forEach((n) => ((n as TrailNode).expanded = false));
+        await setStore(winId, store);
+        sendResponse({ ok: true });
+      } else {
+        sendResponse({ ok: false });
+      }
     } else if (msg.type === "closeNode") {
       const tabId = Number(msg.tabId);
       try {

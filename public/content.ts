@@ -25,10 +25,26 @@
     (e: MouseEvent) => {
       const a = findAnchor(e.target as HTMLElement);
       if (shouldIgnoreClick(e, a)) return;
-      const href = a.getAttribute('href');
+      const href = a?.getAttribute('href');
       try {
         const url = new URL(href || '', location.href).toString();
         e.preventDefault();
+        // Detect spellcheck/autocorrect: if the anchor is inside an input or search bar, reload instead of opening a new tab
+        let isSearchOrInput = false;
+        if (a) {
+          let parent = a.parentElement;
+          while (parent) {
+            if (parent.tagName === 'INPUT' || parent.tagName === 'FORM' || parent.getAttribute('role') === 'search') {
+              isSearchOrInput = true;
+              break;
+            }
+            parent = parent.parentElement;
+          }
+        }
+        if (isSearchOrInput) {
+          location.reload();
+          return;
+        }
         if (typeof chrome !== 'undefined' && chrome.runtime) {
           chrome.runtime.sendMessage({ type: 'openChild', url });
         }
