@@ -1,5 +1,29 @@
 {
   "manifest_version": 3,
+  "name": "Arc Trail Flow",
+  "version": "0.1.0",
+  "description": "Popup UI built with Vite + React.",
+  "action": {
+    "default_title": "Arc Trail Flow",
+    "default_popup": "index.html"
+  },
+  "permissions": [],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html"
+}
+
+{
+  "manifest_version": 3,
   "name": "Arc Trail Tabs — Collapsible Child Tabs",
   "version": "0.1.0",
   "description": "Open links as child tabs within their parent and browse via a collapsible trail.",
