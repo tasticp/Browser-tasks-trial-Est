@@ -7,3 +7,34 @@ TODO:
   there would be a task section in the browser that can b collapesd or opened, and in that section that is on the right side of the browser will be a colume that displayes the tasks the user is on
   every task that the user is one is like a seperate browser as it cannot see the other task's tabs
   they can drag a tab that they want to move from one task to another by draging it into the tasks section and hoering above the task they want to drop it into by releasing it
+
+the trail can be considered breadcrumb to others
+
+closed breadcrumb example
+  > {emoji} {Title_of_website}
+
+Partial breadcrumb example
+  ∨  {emoji} {Title_of_website}
+    > {emoji} {Title_of_website}
+    ∨  {emoji} {Title_of_website}
+      ∨  {emoji} {Title_of_website}
+          {emoji} {Title_of_website}
+      > {emoji} {Title_of_website}
+    ∨  {emoji} {Title_of_website}
+      ∨  {emoji} {Title_of_website}
+          {emoji} {Title_of_website}
+    {emoji} {Title_of_website}
+
+open breadcrumb example
+  ∨  {emoji} {Title_of_website}
+    ∨  {emoji} {Title_of_website}
+        {emoji} {Title_of_website}
+    ∨  {emoji} {Title_of_website}
+      ∨  {emoji} {Title_of_website}
+          {emoji} {Title_of_website}
+      ∨  {emoji} {Title_of_website}
+          {emoji} {Title_of_website}
+    ∨  {emoji} {Title_of_website}
+      ∨  {emoji} {Title_of_website}
+          {emoji} {Title_of_website}
+    {emoji} {Title_of_website}
