@@ -13,14 +13,16 @@
 - Converted all source and extension files to TypeScript for type safety
 - Improved browser extension compatibility (Chrome, Chromium, Firefox)
 - Added type annotations and fixed extension API usage
+- Added left-side parent navigation arrow on tree title rows (non-root), hover-visible and breadcrumb-like
+- Ensured tree items are clickable and children are collapsible under their respective parent across horizontal/vertical layouts
 
 ## Setup Instructions
 
 **Use your preferred IDE**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement is having Node.js installed. You can use npm or Bun.
 
-Follow these steps:
+Follow these steps (npm):
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
@@ -34,6 +36,15 @@ npm i
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
+Alternatively with Bun:
+
+```sh
+# Install dependencies
+bun install
+
+# Start dev server
+bun run dev
+```
 ```
 
 ## What technologies are used for this project?
@@ -47,6 +58,7 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 - Chrome/Firefox Extension APIs
+ - Bun (optional) for dev tasks
 
 ## How can I deploy this project?
 
@@ -85,9 +97,13 @@ Then package the files in the `public/` directory as your browser extension.
 3. Click "Load Temporary Add-on" and select the `manifest.json` file from the `public/` directory.
 4. The extension will be loaded temporarily. Open a new tab and test its features.
 
+### Zen Browser (Firefox-based)
+Zen Browser is built on Firefox, so follow the Firefox steps above to load the temporary add-on. Refer to the Zen Browser repository for context and release notes: [Zen Browser (desktop)](https://github.com/zen-browser/desktop).
+
 ### Notes
 - Any changes to the code require rebuilding (`npm run build`) and reloading the extension in your browser.
 - For production, package the contents of `public/` as a zip and submit to the browser's extension store.
+ - Bun users can run `bun run build` as an alternative to npm.
 
 ## Can I connect a custom domain to my Lovable project?
 

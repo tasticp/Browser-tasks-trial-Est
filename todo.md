@@ -38,3 +38,14 @@ open breadcrumb example
       ∨  {emoji} {Title_of_website}
           {emoji} {Title_of_website}
     {emoji} {Title_of_website}
+
+---
+
+Done (October 31, 2025):
+  - Added left-side parent navigation arrow on title rows (non-root), hover-visible, acts like breadcrumbs.
+  - Tree items are clickable; children are collapsible into their respective parent.
+  - Closing a parent hides its children; children that have been moved/reparented are not affected by closing the original parent.
+  - Breadcrumb-style affordance aligns with the examples above for both horizontal and vertical layouts.
+
+Notes:
+  - Zen Browser (Firefox-based) is supported via the Firefox temporary add-on flow. See README for steps and the Zen repo: https://github.com/zen-browser/desktop

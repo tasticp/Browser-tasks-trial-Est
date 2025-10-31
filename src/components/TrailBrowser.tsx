@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, FolderTree, Link2, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, FolderTree, Link2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
@@ -74,6 +74,15 @@ function TreeNode({
   return (
     <li className="group">
       <div className="flex items-center gap-1">
+        {depth > 0 && (
+          <button
+            aria-label="Go to parent"
+            onClick={() => node.parentId ? onSelect(node.parentId) : undefined}
+            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
         <button
           aria-label={node.expanded ? "Collapse" : "Expand"}
           onClick={() => (hasChildren ? onToggle(node.id) : onSelect(node.id))}
