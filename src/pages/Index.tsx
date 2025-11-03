@@ -1,14 +1,16 @@
 import { useEffect } from "react";
-import TrailBrowser from "@/components/TrailBrowser";
+import { BrowserWindow } from "@/components/browser/BrowserWindow";
 
 const Index = () => {
   useEffect(() => {
-    document.title = "Arc Trail Tabs — Collapsible Child Tabs";
+    document.title = "New Browser — Rust-based, Minimal Memory";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Arc-like trail browsing: open links as child tabs with collapsible levels.");
+    if (meta) meta.setAttribute("content", "A new browser built with Rust for minimal memory usage. Cross-platform: iOS, Android, Windows, Linux, macOS.");
   }, []);
 
-  return <TrailBrowser />;
+  // Use Rust backend for minimal memory usage
+  // Set useRust={false} to use TypeScript implementation for testing
+  return <BrowserWindow engineType="servo" useRust={true} />;
 };
 
 export default Index;
