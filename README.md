@@ -2,6 +2,7 @@
 
 A browser built with **Rust for minimal memory usage** and **cross-platform support**. Not based on Chromium or Firefox. Similar to Ladybird, uses an independent rendering engine architecture.
 
+
 ## Memory Optimized 🚀
 
 - **~10-50MB baseline** (vs 200-500MB for Chromium)
@@ -19,10 +20,6 @@ Works on:
 - ✅ **Linux** (x64, ARM64)
 - ✅ **macOS** (Intel & Apple Silicon)
 - ✅ **Web** (WebAssembly)
-
-## Project info
-
-**URL**: https://lovable.dev/projects/b585dc5f-50ee-4170-b883-92118a110c00
 
 ## Architecture
 
@@ -91,8 +88,7 @@ The **React frontend** provides the UI and communicates with Rust via WebAssembl
 
 ## How can I deploy this project?
 
-
-Simply open [Lovable](https://lovable.dev/projects/b585dc5f-50ee-4170-b883-92118a110c00) and click on Share -> Publish.
+Deploy the built application to your preferred hosting platform or package it as a native app for distribution.
 
 ## Features
 
@@ -104,11 +100,23 @@ Simply open [Lovable](https://lovable.dev/projects/b585dc5f-50ee-4170-b883-92118
 - ✅ **Session Management** - History tracking and session persistence
 - ✅ **Engine Abstraction** - Switch between WebKit, Servo, or custom engines
 
+
 ## Running the Browser
 
 ### Quick Start
 
-See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
+**Windows:**
+```powershell
+.\setup-and-build.ps1
+```
+
+**Linux/macOS:**
+```bash
+chmod +x setup-and-build.sh
+./setup-and-build.sh
+```
+
+See [QUICKSTART.md](./QUICKSTART.md) or [INSTALLATION.md](./INSTALLATION.md) for detailed setup instructions.
 
 ### Development
 
@@ -169,10 +177,186 @@ To connect to real native rendering engines:
 
 See [BROWSER_ARCHITECTURE.md](./BROWSER_ARCHITECTURE.md) for detailed integration instructions.
 
-## Can I connect a custom domain to my Lovable project?
+## Installation Instructions
 
-Yes, you can!
+### Web (Browser)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. **Install Prerequisites:**
+   ```bash
+   # Install Rust
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source $HOME/.cargo/env
+   
+   # Install wasm-pack
+   cargo install wasm-pack
+   
+   # Install Bun (or use npm)
+   curl -fsSL https://bun.sh/install | bash
+   ```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+2. **Build and Run:**
+   ```bash
+   # Install dependencies
+   bun install
+   
+   # Build Rust WASM backend
+   npm run build:rust:wasm
+   
+   # Start development server
+   bun run dev
+   ```
+   
+   Open `http://localhost:8080` in your browser.
+
+### Desktop Applications
+
+
+
+#### Windows
+
+1. **Prerequisites:**
+   - Install [Rust](https://rustup.rs/) (MSVC version)
+   - Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) with C++ workload
+   - Install [Node.js](https://nodejs.org/) or Bun
+
+2. **Build:**
+   ```powershell
+   # Install Rust targets
+   rustup target add x86_64-pc-windows-msvc
+   
+   # Build Rust library
+   cd rust-browser
+   cargo build --release --target x86_64-pc-windows-msvc
+   cd ..
+   
+   # Build frontend
+   bun install
+   bun run build
+   ```
+
+3. **Package:**
+   - Create Windows installer using NSIS, WiX, or similar
+   - Include the built Rust DLL and frontend files
+
+#### macOS
+
+1. **Prerequisites:**
+   - Install [Xcode Command Line Tools](https://developer.apple.com/xcode/)
+   - Install [Rust](https://rustup.rs/)
+   - Install Bun or Node.js
+
+2. **Build:**
+   ```bash
+   # Install Rust targets
+   rustup target add x86_64-apple-darwin aarch64-apple-darwin
+   
+   # Build for your architecture
+   cd rust-browser
+   cargo build --release --target aarch64-apple-darwin  # Apple Silicon
+   # OR
+   cargo build --release --target x86_64-apple-darwin   # Intel
+   cd ..
+   
+   # Build frontend
+   bun install
+   bun run build
+   ```
+
+3. **Package as .app:**
+   ```bash
+   # Create .app bundle structure
+   mkdir -p MyBrowser.app/Contents/{MacOS,Resources}
+   # Copy binaries and resources
+   # Create Info.plist
+   ```
+
+#### Linux
+
+1. **Prerequisites:**
+   ```bash
+   # Install Rust
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   
+   # Install WebKit development libraries
+   # Ubuntu/Debian:
+   sudo apt-get install libwebkit2gtk-4.1-dev build-essential
+   
+   # Fedora:
+   sudo dnf install webkit2gtk3-devel gcc
+   ```
+
+2. **Build:**
+   ```bash
+   # Install Rust target
+   rustup target add x86_64-unknown-linux-gnu
+   
+   # Build Rust library
+   cd rust-browser
+   cargo build --release
+   cd ..
+   
+   # Build frontend
+   bun install
+   bun run build
+   ```
+
+3. **Create .deb/.rpm package:**
+   - Use `cargo-deb` or `cargo-rpm` tools
+   - Or create manual package with proper dependencies
+
+### Mobile Applications
+
+#### Android
+
+1. **Prerequisites:**
+   - Install [Android Studio](https://developer.android.com/studio)
+   - Install [Android NDK](https://developer.android.com/ndk/downloads)
+   - Set environment variable:
+     ```bash
+     export ANDROID_NDK_HOME=/path/to/android-ndk
+     ```
+
+2. **Build:**
+   ```bash
+   # Install Rust Android targets
+   rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+   
+   # Build Rust library for Android
+   cd rust-browser
+   cargo build --release --target aarch64-linux-android
+   cd ..
+   ```
+
+3. **Create Android Project:**
+   - Create new Android Studio project
+   - Copy Rust library to `app/src/main/jniLibs/`
+   - Add JNI bindings in Java/Kotlin
+   - Package as APK/AAB
+
+#### iOS
+
+1. **Prerequisites:**
+   - Install [Xcode](https://developer.apple.com/xcode/)
+   - Install [Rust](https://rustup.rs/)
+   - Install [CocoaPods](https://cocoapods.org/) (if needed)
+
+2. **Build:**
+   ```bash
+   # Install Rust iOS targets
+   rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+   
+   # Build Rust library
+   cd rust-browser
+   cargo build --release --target aarch64-apple-ios
+   cd ..
+   ```
+
+3. **Create Xcode Project:**
+   - Create new iOS project in Xcode
+   - Add Rust library via Build Phases
+   - Link WebKit framework
+   - Build and deploy to device/simulator
+
+See [PLATFORM_BUILD.md](./PLATFORM_BUILD.md) for detailed platform-specific build instructions.
+
+no geruntieee it works its just AI coded if it breaks your deevice i dont hold any responsibility

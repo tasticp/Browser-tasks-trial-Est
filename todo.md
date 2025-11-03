@@ -1,51 +1,78 @@
-TODO:
-  Have visible UI preferably on the title of the html so when looking at the tabs bar you can tell which is the parent and which is the child or both
-  when you close the parent tab the parent's child tab to closed with it
-  if the parent's tab is closed and reopened with either history or with the reopen recently cloased tab funtion it should restore the child tabs together
-  fix the error of when you click the auto corect hyperlink it will not open another tab but will reload the tab
-  it will only open child tabs if the hyperlinks want to open those hyperlink or if the user specificaly opens them themselves if not it will do as what the hyperlinks would normally do which likely is to reload the page to its new hyperlink
-  there would be a task section in the browser that can b collapesd or opened, and in that section that is on the right side of the browser will be a colume that displayes the tasks the user is on
-  every task that the user is one is like a seperate browser as it cannot see the other task's tabs
-  they can drag a tab that they want to move from one task to another by draging it into the tasks section and hoering above the task they want to drop it into by releasing it
+# TODO: Browser Features
 
-the trail can be considered breadcrumb to others
+## Installation & Setup
 
-closed breadcrumb example
+- ✅ Rust backend with minimal memory footprint
+- ✅ Cross-platform build system (iOS, Android, Windows, Linux, macOS)
+- ✅ WebAssembly bindings for web
+- ✅ Installation documentation
+- ⏳ Native mobile app packaging
+- ⏳ Desktop app installers (Windows .msi, macOS .dmg, Linux .deb/.rpm)
+
+## Core Browser Features
+
+### Tab Management
+- ✅ Multi-tab browsing
+- ✅ Parent-child tab relationships
+- ⏳ Visual indicators in tab bar showing parent/child relationships
+- ⏳ Close parent tab closes all child tabs
+- ⏳ Restore closed tabs with children (history/reopen functionality)
+- ⏳ Drag and drop tabs between task groups
+
+### Navigation
+- ✅ Address bar with search
+- ✅ Back/Forward/Reload/Stop controls
+- ⏳ Fix hyperlink behavior (only open child tabs when intended)
+- ⏳ Prevent unwanted tab creation on link clicks
+
+### Task Management
+- ⏳ Task sidebar (collapsible on right side)
+- ⏳ Display active tasks in sidebar
+- ⏳ Each task acts as separate browser session (isolated tabs)
+- ⏳ Drag tabs between tasks
+
+### Breadcrumb Trail UI
+
+**Closed breadcrumb example:**
+```
+> {emoji} {Title_of_website}
+```
+
+**Partial breadcrumb example:**
+```
+∨  {emoji} {Title_of_website}
   > {emoji} {Title_of_website}
-
-Partial breadcrumb example
-  ∨  {emoji} {Title_of_website}
-    > {emoji} {Title_of_website}
-    ∨  {emoji} {Title_of_website}
-      ∨  {emoji} {Title_of_website}
-          {emoji} {Title_of_website}
-      > {emoji} {Title_of_website}
-    ∨  {emoji} {Title_of_website}
-      ∨  {emoji} {Title_of_website}
-          {emoji} {Title_of_website}
-    {emoji} {Title_of_website}
-
-open breadcrumb example
   ∨  {emoji} {Title_of_website}
     ∨  {emoji} {Title_of_website}
         {emoji} {Title_of_website}
+    > {emoji} {Title_of_website}
+```
+
+**Open breadcrumb example:**
+```
+∨  {emoji} {Title_of_website}
+  ∨  {emoji} {Title_of_website}
+      {emoji} {Title_of_website}
+  ∨  {emoji} {Title_of_website}
     ∨  {emoji} {Title_of_website}
-      ∨  {emoji} {Title_of_website}
-          {emoji} {Title_of_website}
-      ∨  {emoji} {Title_of_website}
-          {emoji} {Title_of_website}
-    ∨  {emoji} {Title_of_website}
-      ∨  {emoji} {Title_of_website}
-          {emoji} {Title_of_website}
-    {emoji} {Title_of_website}
+        {emoji} {Title_of_website}
+```
 
----
+## Completed Features
 
-Done (October 31, 2025):
-  - Added left-side parent navigation arrow on title rows (non-root), hover-visible, acts like breadcrumbs.
-  - Tree items are clickable; children are collapsible into their respective parent.
-  - Closing a parent hides its children; children that have been moved/reparented are not affected by closing the original parent.
-  - Breadcrumb-style affordance aligns with the examples above for both horizontal and vertical layouts.
+✅ Rust-based engine with minimal memory usage  
+✅ Cross-platform support  
+✅ Engine abstraction (Servo/WebKit)  
+✅ Memory pooling and tracking  
+✅ Tab management infrastructure  
+✅ Navigation controls  
+✅ Address bar  
+✅ Browser window UI  
+✅ Installation documentation
 
-Notes:
-  - Zen Browser (Firefox-based) is supported via the Firefox temporary add-on flow. See README for steps and the Zen repo: https://github.com/zen-browser/desktop
+## Installation Instructions
+
+See [INSTALLATION.md](./INSTALLATION.md) for detailed setup instructions for:
+- Web (Browser)
+- Desktop (Windows, macOS, Linux)
+- Mobile (Android, iOS)
