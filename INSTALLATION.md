@@ -373,3 +373,4 @@ If you encounter memory issues during build:
 - See [QUICKSTART.md](./QUICKSTART.md) for quick setup
 - Review [BROWSER_ARCHITECTURE.md](./BROWSER_ARCHITECTURE.md) for architecture details
 
+- if it breaks its not my fault
