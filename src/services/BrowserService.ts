@@ -5,6 +5,7 @@
 
 import type { BrowserEngine, BrowserTab, BrowserSession, NavigationHistory } from '@/core/engine/types';
 import { EngineFactory, type EngineType } from '@/core/engine/EngineFactory';
+import { validateAndSanitizeURL, isValidTabId } from '@/utils/security';
 
 export class BrowserService {
   private engine: BrowserEngine;
@@ -28,10 +29,28 @@ export class BrowserService {
   }
 
   async createTab(url?: string, parentTabId?: string): Promise<BrowserTab> {
+    // Security: Validate parent tab ID if provided
+    if (parentTabId && !isValidTabId(parentTabId)) {
+      throw new Error('Invalid parent tab ID');
+    }
+    
     const tabId = this.generateTabId();
+    
+    // Security: Validate and sanitize URL if provided
+    let safeUrl = 'about:blank';
+    if (url && url !== 'about:blank') {
+      try {
+        safeUrl = validateAndSanitizeURL(url);
+      } catch (error) {
+        // If URL is invalid, create tab with blank page
+        console.warn('Invalid URL provided, creating blank tab:', error);
+        safeUrl = 'about:blank';
+      }
+    }
+    
     const tab: BrowserTab = {
       id: tabId,
-      url: url || 'about:blank',
+      url: safeUrl,
       title: 'New Tab',
       isLoading: false,
       canGoBack: false,
@@ -48,15 +67,20 @@ export class BrowserService {
     });
     this.navigationUnsubscribers.set(tabId, unsubscribe);
 
-    // Load URL if provided
-    if (url && url !== 'about:blank') {
-      await this.engine.loadURL(url, tabId);
+    // Load URL if provided and valid
+    if (safeUrl && safeUrl !== 'about:blank') {
+      await this.engine.loadURL(safeUrl, tabId);
     }
 
     return tab;
   }
 
   async closeTab(tabId: string): Promise<void> {
+    // Security: Validate tab ID
+    if (!isValidTabId(tabId)) {
+      throw new Error('Invalid tab ID');
+    }
+    
     const unsubscribe = this.navigationUnsubscribers.get(tabId);
     if (unsubscribe) {
       unsubscribe();
@@ -71,7 +95,7 @@ export class BrowserService {
       this.session.activeTabId = remainingTabs[remainingTabs.length - 1] || null;
     }
 
-    // Close child tabs
+    // Close child tabs recursively
     const childTabs = Array.from(this.session.tabs.values())
       .filter(tab => tab.parentTabId === tabId);
     
@@ -81,11 +105,18 @@ export class BrowserService {
   }
 
   async navigateTo(tabId: string, url: string): Promise<void> {
+    // Security: Validate tab ID
+    if (!isValidTabId(tabId)) {
+      throw new Error('Invalid tab ID');
+    }
+    
     const tab = this.session.tabs.get(tabId);
-    if (!tab) return;
+    if (!tab) {
+      throw new Error('Tab not found');
+    }
 
-    // Validate and normalize URL
-    const normalizedURL = this.normalizeURL(url);
+    // Security: Validate and normalize URL
+    const normalizedURL = validateAndSanitizeURL(url);
     
     await this.engine.loadURL(normalizedURL, tabId);
     this.addToHistory(normalizedURL, tab.title);
@@ -108,8 +139,15 @@ export class BrowserService {
   }
 
   setActiveTab(tabId: string): void {
+    // Security: Validate tab ID
+    if (!isValidTabId(tabId)) {
+      throw new Error('Invalid tab ID');
+    }
+    
     if (this.session.tabs.has(tabId)) {
       this.session.activeTabId = tabId;
+    } else {
+      throw new Error('Tab not found');
     }
   }
 
@@ -174,20 +212,8 @@ export class BrowserService {
   }
 
   private normalizeURL(input: string): string {
-    // If it's already a valid URL, return it
-    try {
-      const url = new URL(input);
-      return url.href;
-    } catch {
-      // Try to construct a URL with https://
-      try {
-        const url = new URL(`https://${input}`);
-        return url.href;
-      } catch {
-        // If it's a search query, use search engine
-        return `https://www.google.com/search?q=${encodeURIComponent(input)}`;
-      }
-    }
+    // Use centralized security utility
+    return validateAndSanitizeURL(input);
   }
 
   private addToHistory(url: string, title: string): void {

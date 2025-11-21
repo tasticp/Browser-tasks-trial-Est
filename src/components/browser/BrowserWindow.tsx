@@ -21,24 +21,46 @@ export const BrowserWindow = ({
   const [memoryStats, setMemoryStats] = useState<{ current: number; peak: number } | null>(null);
 
   useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
     if (useRust) {
       // Initialize Rust WASM service for minimal memory usage
       import('@/services/RustBrowserService')
         .then(async ({ RustBrowserService }) => {
-          const service = await RustBrowserService.getInstance(engineType);
-          setRustService(service);
-          
-          // Create initial tab
-          const tabId = await service.createTab();
-          setActiveTabId(tabId);
+          try {
+            const service = await RustBrowserService.getInstance(engineType);
+            setRustService(service);
+            
+            // Create initial tab
+            const tabId = await service.createTab();
+            setActiveTabId(tabId);
+          } catch (error) {
+            console.error('Failed to initialize Rust service:', error);
+            // Fallback to TypeScript service on error
+            browserService.initialize().then(() => {
+              const allTabs = browserService.getAllTabs();
+              setTabs(allTabs);
+              setActiveTabId(browserService.getActiveTab()?.id || null);
+            });
+          }
         })
-        .catch(console.error);
+        .catch((error) => {
+          console.error('Failed to load Rust service:', error);
+          // Fallback to TypeScript service
+          browserService.initialize().then(() => {
+            const allTabs = browserService.getAllTabs();
+            setTabs(allTabs);
+            setActiveTabId(browserService.getActiveTab()?.id || null);
+          });
+        });
     } else {
       // Use TypeScript service
       browserService.initialize().then(() => {
         const allTabs = browserService.getAllTabs();
         setTabs(allTabs);
         setActiveTabId(browserService.getActiveTab()?.id || null);
+      }).catch((error) => {
+        console.error('Failed to initialize browser service:', error);
       });
 
       browserService.onTabUpdated = (tab) => {
@@ -46,18 +68,23 @@ export const BrowserWindow = ({
       };
 
       // Memory monitoring (would connect to Rust service in production)
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         if (rustService) {
           // Query memory stats from Rust
+          // TODO: Implement memory stats query when Rust service is available
         }
       }, 1000);
-
-      return () => {
-        clearInterval(interval);
-        browserService.destroy();
-      };
     }
-  }, [browserService, useRust, engineType, rustService]);
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+      if (!useRust) {
+        browserService.destroy().catch(console.error);
+      }
+    };
+  }, [browserService, useRust, engineType]);
 
   const activeTab = useRust && rustService && activeTabId
     ? rustService.getTabInfo(activeTabId)
@@ -102,45 +129,88 @@ export const BrowserWindow = ({
   const handleNavigate = async (url: string) => {
     if (!activeTabId) return;
     
-    if (useRust && rustService) {
-      await rustService.navigate(activeTabId, url);
-    } else {
-      await browserService.navigateTo(activeTabId, url);
-      setTabs([...browserService.getAllTabs()]);
+    // Security: Validate URL before navigation
+    if (!url || typeof url !== 'string') {
+      console.error('Invalid URL provided');
+      return;
+    }
+    
+    try {
+      if (useRust && rustService) {
+        await rustService.navigate(activeTabId, url);
+      } else {
+        await browserService.navigateTo(activeTabId, url);
+        setTabs([...browserService.getAllTabs()]);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Could show user-friendly error message here
     }
   };
 
   const handleGoBack = async () => {
     if (!activeTabId) return;
-    if (!useRust) {
-      await browserService.goBack(activeTabId);
+    try {
+      if (useRust && rustService) {
+        // TODO: Implement Rust service navigation methods
+        console.warn('Rust service navigation not yet implemented');
+      } else {
+        await browserService.goBack(activeTabId);
+        setTabs([...browserService.getAllTabs()]);
+      }
+    } catch (error) {
+      console.error('Error going back:', error);
     }
   };
 
   const handleGoForward = async () => {
     if (!activeTabId) return;
-    if (!useRust) {
-      await browserService.goForward(activeTabId);
+    try {
+      if (useRust && rustService) {
+        // TODO: Implement Rust service navigation methods
+        console.warn('Rust service navigation not yet implemented');
+      } else {
+        await browserService.goForward(activeTabId);
+        setTabs([...browserService.getAllTabs()]);
+      }
+    } catch (error) {
+      console.error('Error going forward:', error);
     }
   };
 
   const handleReload = async () => {
     if (!activeTabId) return;
-    if (!useRust) {
-      await browserService.reload(activeTabId);
+    try {
+      if (useRust && rustService) {
+        // TODO: Implement Rust service reload
+        console.warn('Rust service reload not yet implemented');
+      } else {
+        await browserService.reload(activeTabId);
+        setTabs([...browserService.getAllTabs()]);
+      }
+    } catch (error) {
+      console.error('Error reloading:', error);
     }
   };
 
   const handleStop = async () => {
     if (!activeTabId) return;
-    if (!useRust) {
-      await browserService.stop(activeTabId);
+    try {
+      if (useRust && rustService) {
+        // TODO: Implement Rust service stop
+        console.warn('Rust service stop not yet implemented');
+      } else {
+        await browserService.stop(activeTabId);
+        setTabs([...browserService.getAllTabs()]);
+      }
+    } catch (error) {
+      console.error('Error stopping:', error);
     }
   };
 
   // Get tabs list
   const allTabs = useRust && rustService
-    ? [] // Would fetch from Rust service
+    ? tabs // TODO: Fetch from Rust service when implemented
     : tabs;
 
   return (

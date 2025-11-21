@@ -48,6 +48,18 @@ export class RustBrowserService {
     if (!wasmBrowser) {
       throw new Error('WASM browser not initialized');
     }
+    
+    // Security: Validate URL if provided
+    if (url) {
+      const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
+      const lowerUrl = url.toLowerCase().trim();
+      for (const protocol of dangerousProtocols) {
+        if (lowerUrl.startsWith(protocol)) {
+          throw new Error(`Blocked protocol: ${protocol}`);
+        }
+      }
+    }
+    
     return wasmBrowser.create_tab(url || null);
   }
 
@@ -62,6 +74,21 @@ export class RustBrowserService {
     if (!wasmBrowser) {
       throw new Error('WASM browser not initialized');
     }
+    
+    // Security: Validate URL before navigation
+    if (!url || typeof url !== 'string') {
+      throw new Error('Invalid URL provided');
+    }
+    
+    // Security: Block dangerous protocols
+    const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
+    const lowerUrl = url.toLowerCase().trim();
+    for (const protocol of dangerousProtocols) {
+      if (lowerUrl.startsWith(protocol)) {
+        throw new Error(`Blocked protocol: ${protocol}`);
+      }
+    }
+    
     await wasmBrowser.navigate(tabId, url);
   }
 

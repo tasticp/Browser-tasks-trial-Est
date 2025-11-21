@@ -1,115 +1,131 @@
 /**
- * Servo-based engine implementation
- * Servo is Mozilla's experimental Rust-based browser engine
- * This provides an alternative to WebKit
+ * Servo Engine implementation
+ * Placeholder for Servo integration - would connect to native Servo in production
  */
 
 import type { BrowserEngine, NavigationState } from './types';
+import { validateAndSanitizeURL } from '@/utils/security';
 
 export class ServoEngine implements BrowserEngine {
-  private navigationListeners: Map<string, Set<(state: NavigationState) => void>> = new Map();
-  private servoInstances: Map<string, any> = new Map();
+  private navigationCallbacks: Map<string, (state: NavigationState) => void> = new Map();
+  private tabStates: Map<string, NavigationState> = new Map();
+  private initialized = false;
 
   async initialize(): Promise<void> {
-    // Initialize Servo engine (Rust-based, would use WASM or native bindings)
-    console.log('Initializing Servo engine (Rust-based)');
+    if (this.initialized) return;
+    
+    // In production, this would initialize native Servo bindings
+    // Servo is Rust-based, so this would use FFI or WASM
+    this.initialized = true;
+  }
+
+  async destroy(): Promise<void> {
+    this.navigationCallbacks.clear();
+    this.tabStates.clear();
+    this.initialized = false;
   }
 
   async loadURL(url: string, tabId: string): Promise<void> {
-    console.log(`Loading URL in Servo: ${url} for tab ${tabId}`);
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    // Validate URL
+    const normalizedURL = this.validateAndNormalizeURL(url);
     
-    this.notifyNavigationState(tabId, {
-      url,
+    // Update state
+    const state: NavigationState = {
+      url: normalizedURL,
       title: 'Loading...',
+      isLoading: true,
       canGoBack: false,
       canGoForward: false,
-      isLoading: true,
-      loadingProgress: 0,
-    });
+    };
 
+    this.tabStates.set(tabId, state);
+    this.notifyNavigationStateChanged(tabId, state);
+
+    // Simulate navigation (in production, this would call Servo)
     setTimeout(() => {
-      this.notifyNavigationState(tabId, {
-        url,
-        title: this.extractTitleFromURL(url),
-        canGoBack: true,
-        canGoForward: false,
+      const finalState: NavigationState = {
+        url: normalizedURL,
+        title: this.extractTitleFromURL(normalizedURL),
         isLoading: false,
-        loadingProgress: 100,
-      });
+        canGoBack: this.tabStates.get(tabId)?.canGoBack || false,
+        canGoForward: false,
+      };
+      this.tabStates.set(tabId, finalState);
+      this.notifyNavigationStateChanged(tabId, finalState);
     }, 500);
   }
 
   async goBack(tabId: string): Promise<void> {
-    console.log(`Servo: Going back for tab ${tabId}`);
+    const state = this.tabStates.get(tabId);
+    if (state && state.canGoBack) {
+      // In production, this would call Servo's back navigation
+      state.canGoForward = true;
+      this.notifyNavigationStateChanged(tabId, state);
+    }
   }
 
   async goForward(tabId: string): Promise<void> {
-    console.log(`Servo: Going forward for tab ${tabId}`);
+    const state = this.tabStates.get(tabId);
+    if (state && state.canGoForward) {
+      // In production, this would call Servo's forward navigation
+      state.canGoBack = true;
+      this.notifyNavigationStateChanged(tabId, state);
+    }
   }
 
   async reload(tabId: string): Promise<void> {
-    console.log(`Servo: Reloading tab ${tabId}`);
+    const state = this.tabStates.get(tabId);
+    if (state) {
+      state.isLoading = true;
+      this.notifyNavigationStateChanged(tabId, state);
+      
+      // Simulate reload
+      setTimeout(() => {
+        state.isLoading = false;
+        this.notifyNavigationStateChanged(tabId, state);
+      }, 500);
+    }
   }
 
   async stop(tabId: string): Promise<void> {
-    console.log(`Servo: Stopping load for tab ${tabId}`);
-  }
-
-  async getCurrentURL(tabId: string): Promise<string> {
-    return 'about:blank';
-  }
-
-  async getPageTitle(tabId: string): Promise<string> {
-    return 'New Tab';
-  }
-
-  async isLoading(tabId: string): Promise<boolean> {
-    return false;
-  }
-
-  onNavigationStateChanged(
-    tabId: string,
-    callback: (state: NavigationState) => void
-  ): () => void {
-    if (!this.navigationListeners.has(tabId)) {
-      this.navigationListeners.set(tabId, new Set());
+    const state = this.tabStates.get(tabId);
+    if (state) {
+      state.isLoading = false;
+      this.notifyNavigationStateChanged(tabId, state);
     }
-    this.navigationListeners.get(tabId)!.add(callback);
+  }
 
+  onNavigationStateChanged(tabId: string, callback: (state: NavigationState) => void): () => void {
+    this.navigationCallbacks.set(tabId, callback);
+    
+    // Return unsubscribe function
     return () => {
-      this.navigationListeners.get(tabId)?.delete(callback);
+      this.navigationCallbacks.delete(tabId);
     };
   }
 
-  async executeScript(tabId: string, script: string): Promise<any> {
-    console.log(`Executing script in Servo tab ${tabId}`);
-    return null;
-  }
-
-  async injectCSS(tabId: string, css: string): Promise<void> {
-    console.log(`Injecting CSS in Servo tab ${tabId}`);
-  }
-
-  async destroy(): Promise<void> {
-    this.servoInstances.clear();
-    this.navigationListeners.clear();
-  }
-
-  private notifyNavigationState(tabId: string, state: NavigationState): void {
-    const listeners = this.navigationListeners.get(tabId);
-    if (listeners) {
-      listeners.forEach(callback => callback(state));
+  private notifyNavigationStateChanged(tabId: string, state: NavigationState): void {
+    const callback = this.navigationCallbacks.get(tabId);
+    if (callback) {
+      callback(state);
     }
+  }
+
+  private validateAndNormalizeURL(input: string): string {
+    // Use centralized security utility
+    return validateAndSanitizeURL(input);
   }
 
   private extractTitleFromURL(url: string): string {
     try {
       const urlObj = new URL(url);
-      const hostname = urlObj.hostname.replace('www.', '');
-      return hostname || 'New Tab';
+      return urlObj.hostname.replace('www.', '');
     } catch {
       return 'New Tab';
     }
   }
 }
-

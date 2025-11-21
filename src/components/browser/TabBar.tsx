@@ -37,8 +37,21 @@ export const TabBar = ({
               src={tab.favicon}
               alt=""
               className="w-4 h-4 flex-shrink-0"
+              loading="lazy"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
+              }}
+              onLoad={(e) => {
+                // Security: Validate favicon URL is safe
+                const img = e.target as HTMLImageElement;
+                try {
+                  const url = new URL(img.src);
+                  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+                    img.style.display = 'none';
+                  }
+                } catch {
+                  img.style.display = 'none';
+                }
               }}
             />
           ) : (

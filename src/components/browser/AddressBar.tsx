@@ -35,7 +35,11 @@ export const AddressBar = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onNavigate(inputValue);
+    // Security: Sanitize input before navigation
+    const sanitized = inputValue.trim();
+    if (sanitized) {
+      onNavigate(sanitized);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -1,129 +1,131 @@
 /**
- * WebKit-based engine implementation
- * This would connect to native WebKit libraries via Node.js bindings
- * Similar to how Ladybird uses LibWeb
+ * WebKit Engine implementation
+ * Placeholder for WebKit integration - would connect to native WebKit in production
  */
 
 import type { BrowserEngine, NavigationState } from './types';
+import { validateAndSanitizeURL } from '@/utils/security';
 
 export class WebKitEngine implements BrowserEngine {
-  private navigationListeners: Map<string, Set<(state: NavigationState) => void>> = new Map();
-  private webkitInstances: Map<string, any> = new Map(); // Would be native WebKit instances
+  private navigationCallbacks: Map<string, (state: NavigationState) => void> = new Map();
+  private tabStates: Map<string, NavigationState> = new Map();
+  private initialized = false;
 
   async initialize(): Promise<void> {
-    // In a real implementation, this would initialize native WebKit libraries
-    // For now, we'll create a mock implementation that can be extended
-    console.log('Initializing WebKit engine (Ladybird-style)');
+    if (this.initialized) return;
+    
+    // In production, this would initialize native WebKit bindings
+    // For now, this is a mock implementation
+    this.initialized = true;
+  }
+
+  async destroy(): Promise<void> {
+    this.navigationCallbacks.clear();
+    this.tabStates.clear();
+    this.initialized = false;
   }
 
   async loadURL(url: string, tabId: string): Promise<void> {
-    // In real implementation: native WebKit load URL
-    console.log(`Loading URL in WebKit: ${url} for tab ${tabId}`);
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    // Validate URL
+    const normalizedURL = this.validateAndNormalizeURL(url);
     
-    // Simulate navigation state change
-    this.notifyNavigationState(tabId, {
-      url,
+    // Update state
+    const state: NavigationState = {
+      url: normalizedURL,
       title: 'Loading...',
+      isLoading: true,
       canGoBack: false,
       canGoForward: false,
-      isLoading: true,
-      loadingProgress: 0,
-    });
+    };
 
-    // Simulate page load
+    this.tabStates.set(tabId, state);
+    this.notifyNavigationStateChanged(tabId, state);
+
+    // Simulate navigation (in production, this would call WebKit)
     setTimeout(() => {
-      this.notifyNavigationState(tabId, {
-        url,
-        title: this.extractTitleFromURL(url),
-        canGoBack: true,
-        canGoForward: false,
+      const finalState: NavigationState = {
+        url: normalizedURL,
+        title: this.extractTitleFromURL(normalizedURL),
         isLoading: false,
-        loadingProgress: 100,
-      });
+        canGoBack: this.tabStates.get(tabId)?.canGoBack || false,
+        canGoForward: false,
+      };
+      this.tabStates.set(tabId, finalState);
+      this.notifyNavigationStateChanged(tabId, finalState);
     }, 500);
   }
 
   async goBack(tabId: string): Promise<void> {
-    console.log(`WebKit: Going back for tab ${tabId}`);
-    // In real implementation: native WebKit go back
+    const state = this.tabStates.get(tabId);
+    if (state && state.canGoBack) {
+      // In production, this would call WebKit's back navigation
+      state.canGoForward = true;
+      this.notifyNavigationStateChanged(tabId, state);
+    }
   }
 
   async goForward(tabId: string): Promise<void> {
-    console.log(`WebKit: Going forward for tab ${tabId}`);
-    // In real implementation: native WebKit go forward
+    const state = this.tabStates.get(tabId);
+    if (state && state.canGoForward) {
+      // In production, this would call WebKit's forward navigation
+      state.canGoBack = true;
+      this.notifyNavigationStateChanged(tabId, state);
+    }
   }
 
   async reload(tabId: string): Promise<void> {
-    console.log(`WebKit: Reloading tab ${tabId}`);
-    // In real implementation: native WebKit reload
+    const state = this.tabStates.get(tabId);
+    if (state) {
+      state.isLoading = true;
+      this.notifyNavigationStateChanged(tabId, state);
+      
+      // Simulate reload
+      setTimeout(() => {
+        state.isLoading = false;
+        this.notifyNavigationStateChanged(tabId, state);
+      }, 500);
+    }
   }
 
   async stop(tabId: string): Promise<void> {
-    console.log(`WebKit: Stopping load for tab ${tabId}`);
-    // In real implementation: native WebKit stop
-  }
-
-  async getCurrentURL(tabId: string): Promise<string> {
-    // In real implementation: get URL from native WebKit instance
-    return 'about:blank';
-  }
-
-  async getPageTitle(tabId: string): Promise<string> {
-    // In real implementation: get title from native WebKit instance
-    return 'New Tab';
-  }
-
-  async isLoading(tabId: string): Promise<boolean> {
-    // In real implementation: check loading state from native WebKit
-    return false;
-  }
-
-  onNavigationStateChanged(
-    tabId: string,
-    callback: (state: NavigationState) => void
-  ): () => void {
-    if (!this.navigationListeners.has(tabId)) {
-      this.navigationListeners.set(tabId, new Set());
+    const state = this.tabStates.get(tabId);
+    if (state) {
+      state.isLoading = false;
+      this.notifyNavigationStateChanged(tabId, state);
     }
-    this.navigationListeners.get(tabId)!.add(callback);
+  }
 
+  onNavigationStateChanged(tabId: string, callback: (state: NavigationState) => void): () => void {
+    this.navigationCallbacks.set(tabId, callback);
+    
+    // Return unsubscribe function
     return () => {
-      this.navigationListeners.get(tabId)?.delete(callback);
+      this.navigationCallbacks.delete(tabId);
     };
   }
 
-  async executeScript(tabId: string, script: string): Promise<any> {
-    // In real implementation: execute JS in WebKit context
-    console.log(`Executing script in WebKit tab ${tabId}`);
-    return null;
-  }
-
-  async injectCSS(tabId: string, css: string): Promise<void> {
-    // In real implementation: inject CSS into WebKit page
-    console.log(`Injecting CSS in WebKit tab ${tabId}`);
-  }
-
-  async destroy(): Promise<void> {
-    // Cleanup native WebKit instances
-    this.webkitInstances.clear();
-    this.navigationListeners.clear();
-  }
-
-  private notifyNavigationState(tabId: string, state: NavigationState): void {
-    const listeners = this.navigationListeners.get(tabId);
-    if (listeners) {
-      listeners.forEach(callback => callback(state));
+  private notifyNavigationStateChanged(tabId: string, state: NavigationState): void {
+    const callback = this.navigationCallbacks.get(tabId);
+    if (callback) {
+      callback(state);
     }
+  }
+
+  private validateAndNormalizeURL(input: string): string {
+    // Use centralized security utility
+    return validateAndSanitizeURL(input);
   }
 
   private extractTitleFromURL(url: string): string {
     try {
       const urlObj = new URL(url);
-      const hostname = urlObj.hostname.replace('www.', '');
-      return hostname || 'New Tab';
+      return urlObj.hostname.replace('www.', '');
     } catch {
       return 'New Tab';
     }
   }
 }
-
